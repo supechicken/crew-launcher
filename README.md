@@ -1,4 +1,4 @@
-<p align="center"><img src="/images/brew.png" alt="Chromebrew logo" /></p>
+<p align="center"><img src="https://github.com/skycocker/chromebrew/images/brew.png" alt="Chromebrew logo" /></p>
 
 <h1 align="center">Chromebrew Launcher</h1>
 
