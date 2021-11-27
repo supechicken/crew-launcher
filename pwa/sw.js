@@ -5,4 +5,4 @@ self.addEventListener('fetch', (req) => {
     console.err('connection error: ', e);
     return caches.match('offline.html');
   }
-}
+});
