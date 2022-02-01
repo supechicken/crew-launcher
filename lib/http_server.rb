@@ -11,16 +11,14 @@ MimeType = {
 
 def HTTPHeader (status_code, content_type = 'text/plain', extra = '')
   # HTTPHeader: return HTTP header based on given infomation
-  status_msg = begin
-    case status_code
-    when 503
-      'Service Unavailable'
-    when 404
-      'Not Found'
-    when 200
-      'OK'
-    end
-  end
+  status_msg = case status_code
+               when 503
+                 'Service Unavailable'
+               when 404
+                 'Not Found'
+               when 200
+                 'OK'
+               end
 
   return <<~EOT.encode(crlf_newline: true)
     HTTP/1.1 #{status_code} #{status_msg}
@@ -39,10 +37,12 @@ module HTTPServer
     begin
       Socket.accept_loop(server) do |sock, _|
         begin
-          request = sock.gets
-          next unless request # undefined method `split' for nil:NilClass
+          header = sock.readlines(chomp: true)
+          next unless header.empty? # undefined method `split' for nil:NilClass
 
-          method, path, _ = request.split(' ', 3)
+          Verbose.puts 'Received HTTP request header:', *header.map {|m| "> #{m}"}
+
+          method, path, _ = request[0].split(' ', 3)
           uri = URI(path)
           yield sock, uri, method
         rescue Errno::EPIPE
