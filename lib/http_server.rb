@@ -9,7 +9,8 @@ MimeType = {
   '.svg' => 'image/svg+xml',
 }
 
-def HTTPHeader (status_code, content_type = 'text/plain', extra = nil)
+def HTTPHeader (status_code, content_type = 'text/plain', extra = '')
+  # HTTPHeader: return HTTP header based on given infomation
   status_msg = begin
     case status_code
     when 503
@@ -24,11 +25,12 @@ def HTTPHeader (status_code, content_type = 'text/plain', extra = nil)
   return <<~EOT.encode(crlf_newline: true)
     HTTP/1.1 #{status_code} #{status_msg}
     Content-Type: #{content_type}
-    #{"#{extra}\n" if extra}
+    #{"#{extra}\n" if extra.to_s.empty?}
   EOT
 end
 
 module HTTPServer
+  # HTTPServer: wrapper for TCPServer
   def self.start(port = PORT, &block)
     server = TCPServer.new('localhost', port)
     # add REUSEADDR option to prevent kernel from keeping the port
