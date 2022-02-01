@@ -1,6 +1,6 @@
-# Chromebrew Launcher
-
-## Add X/Wayland applications shortcut to Chrome/Chromium OS launcher
+<p align="center"><img src="https://github.com/skycocker/chromebrew/blob/master/images/brew.png" alt="Chromebrew logo" /></p>
+<h1 align="center">Chromebrew Launcher</h1>
+<p align="center">Add X/Wayland applications shortcut to Chrome/Chromium OS launcher</p>
 
 ## Supported Systems
 - All architecture supported by Chromebrew
