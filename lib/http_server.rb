@@ -42,7 +42,7 @@ module HTTPServer
 
           Verbose.puts 'Received HTTP request header:', *header.map {|m| "> #{m}"}
 
-          method, path, _ = request[0].split(' ', 3)
+          method, path, _ = header[0].split(' ', 3)
           uri = URI(path)
           yield sock, uri, method
         rescue Errno::EPIPE
