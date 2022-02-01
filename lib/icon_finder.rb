@@ -41,10 +41,10 @@ module IconFinder
                                         )
                                      convert_img(matchedIcon)
                                    elsif matchIcon
-                                     matchedIcon, getImgSize(matchedIcon), MimeType[ File.extname(matchedIcon) ]
+                                     [ matchedIcon, getImgSize(matchedIcon), MimeType[ File.extname(matchedIcon) ] ]
                                    else
                                      error 'Unable to find an icon :/'
-                                     iconPath, iconSize, iconMime = CREWICON, '546x546', 'image/png'
+                                     [ CREWICON, '546x546', 'image/png' ]
                                    end
 
     # remove duplicate slash in path
