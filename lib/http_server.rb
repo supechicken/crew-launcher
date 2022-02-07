@@ -44,7 +44,7 @@ module HTTPServer
 
           method, path, _ = header[0].split(' ', 3)
           uri = URI(path)
-          params = URI.decode_www_form(uri.query.to_s).to_h
+          params = URI.decode_www_form(uri.query).to_h
 
           yield sock, uri, params, method
         rescue Errno::EPIPE
