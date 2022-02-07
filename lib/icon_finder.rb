@@ -1,13 +1,13 @@
 module IconFinder
   def self.find(iconName) # find an icon from ${XDG_ICON_DIRS}
-    if icoName[0] == '/'
+    if iconName[0] == '/'
       iconPath, iconMime = iconName, MimeType[ File.extname(iconName) ]
     else
-      svgIco = Dir["/usr/local/share/icons/*/scalable/apps/#{iconName}.svg"]
-      iconPath, iconMime = svgIco[0], MimeType['.svg'] if svgIco.any?
+      svgIcon = Dir["/usr/local/share/icons/*/scalable/apps/#{iconName}.svg"]
+      iconPath, iconMime = svgIco[0], MimeType['.svg'] if svgIcon.any?
 
-      pngIco = Dir["/usr/local/share/icons/*/*x*/apps/#{iconName}.png"].sort_by {|path| path[/\/(\d+)x\d+\//, 1] }
-      iconPath, iconMime = pngIco[-1], MimeType['.png'] if pngIco.any? or pngIco[-1][/\/(\d+)x\d+\//, 1].to_i < 144
+      pngIcon = Dir["/usr/local/share/icons/*/*x*/apps/#{iconName}.png"].sort_by {|path| path[/\/(\d+)x\d+\//, 1] }
+      iconPath, iconMime = pngIcon[-1], MimeType['.png'] if pngIcon.any? or pngIcon[-1][/\/(\d+)x\d+\//, 1].to_i < 144
 
       return nil
     end
