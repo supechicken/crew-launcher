@@ -4,7 +4,7 @@ module IconFinder
       iconPath, iconMime = iconName, MimeType[ File.extname(iconName) ]
     else
       svgIcon = Dir["/usr/local/share/icons/*/scalable/apps/#{iconName}.svg"]
-      iconPath, iconMime = svgIco[0], MimeType['.svg'] if svgIcon.any?
+      iconPath, iconMime = svgIcon[0], MimeType['.svg'] if svgIcon.any?
 
       pngIcon = Dir["/usr/local/share/icons/*/*x*/apps/#{iconName}.png"].sort_by {|path| path[/\/(\d+)x\d+\//, 1] }
       iconPath, iconMime = pngIcon[-1], MimeType['.png'] if pngIcon.any? or pngIcon[-1][/\/(\d+)x\d+\//, 1].to_i < 144
