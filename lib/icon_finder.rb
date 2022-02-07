@@ -1,5 +1,5 @@
 module IconFinder
-  def self.find(pkgName, iconName) # find an icon from ${XDG_ICON_DIRS}
+  def self.find(iconName) # find an icon from ${XDG_ICON_DIRS}
     if icoName[0] == '/'
       iconPath, iconMime = iconName, MimeType[ File.extname(iconName) ]
     else
