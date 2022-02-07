@@ -1,56 +1,23 @@
-def magick_installed?
-  return system('command -v convert', out: '/dev/null')
-end
-
-def getImgSize (icon, width_only: false)
-  # img_size: return size of the icon
-  format = (width_only)? '%w' : '%wx%h'
-  return `identify -format '#{format}' #{icon}`.chomp
-end
-
-def convert_img (imgFile, convertedSize = '512x512') # convert icon to .png format
-  imgName = File.basename(imgFile, '.*')
-  outImg = "#{ICONDIR}/#{imgName}.png"
-
-  system 'convert', '-resize', convertedSize, imgFile, outImg, exception: true
-  return outImg, convertedSize, 'image/png'
-end
-
 module IconFinder
-  def self.find(pkgName, iconName) # find an icon from paths in package's filelist
-    matchedIcon = Dir[*IconSearchGlob.map {|path| path % pkgName}].sort_by do |icon|
-                    # priority: '.svg' > '.png' > '.xpm' > Chromebrew Icon
-                    case File.extname(icon)
-                    when '.svg'
-                      3
-                    when '.png'
-                      pngSize = getImgSize(icon, w_only: true).to_i
-                      # assign priority based on the image size
-                      "2.#{pngSize.rjust(4, '0')}".to_f
-                    when '.xpm'
-                      0
-                    end
-                  end[-1]
+  def self.find(pkgName, iconName) # find an icon from ${XDG_ICON_DIRS}
+    if icoName[0] == '/'
+      iconPath, iconMime = iconName, MimeType[ File.extname(iconName) ]
+    else
+      svgIco = Dir["/usr/local/share/icons/*/scalable/apps/#{iconName}.svg"]
+      iconPath, iconMime = svgIco[0], MimeType['.svg'] if svgIco.any?
 
-    # convert the XPM file to PNG as XPM is not supported by chrome
-    # if the icon size is smaller than 144x144px, resize it to meets the minimum requirement of PWA icons
-    iconPath, iconSize, iconMime = if matchIcon and matchIcon !~ /\.svg$/ and \
-                                        (
-                                          getImgSize(matchedIcon, w_only: true).to_i >= 144 or \
-                                          matchedIcon =~ /\.xpm$/
-                                        )
-                                     convert_img(matchedIcon)
-                                   elsif matchIcon
-                                     [ matchedIcon, getImgSize(matchedIcon), MimeType[ File.extname(matchedIcon) ] ]
-                                   else
-                                     error 'Unable to find an icon :/'
-                                     [ CREWICON, '546x546', 'image/png' ]
-                                   end
+      pngIco = Dir["/usr/local/share/icons/*/*x*/apps/#{iconName}.png"].sort_by {|path| path[/\/(\d+)x\d+\//, 1] }
+      iconPath, iconMime = pngIco[-1], MimeType['.png'] if pngIco.any? or pngIco[-1][/\/(\d+)x\d+\//, 1].to_i < 144
+
+      return nil
+    end
 
     # remove duplicate slash in path
     iconPath.squeeze!('/')
 
-    Verbose.puts "Icon found: #{iconPath}" unless iconPath == CREWICON
-    return iconPath, iconSize, iconMime
+    if iconPath
+      Verbose.puts "Icon found: #{iconPath}"
+      return iconPath, iconMime
+    end
   end
 end
