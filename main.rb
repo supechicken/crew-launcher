@@ -5,7 +5,6 @@ require 'fileutils'
 require 'socket'
 require 'uri'
 require 'json'
-require 'securerandom'
 require_relative 'lib/const'
 require_relative 'lib/color'
 require_relative 'lib/desktop_file'
@@ -49,58 +48,32 @@ def stopExistingDaemon
   end
 end
 
-def CreateProfile(arg)
-  # get desktop entry file path from package's filelist if a package name is given
-  #if arg[0] != '/'
-    file = DesktopFile.find(arg)
-  #else
-  #  file = arg
-  #end
+def CreateProfile(entryFile)
+  # convert given path to absolute path
+  entryFile = File.expand_path(entryFile)
 
-  abort "crew-launcher: No such file or directory -- '#{file}'".lightred unless File.exist?(file)
+  abort "crew-launcher: No such file or directory -- '#{entryFile}'".lightred unless File.exist?(entryFile)
+
   # convert parsed hash into json format
-  desktop = DesktopFile.parse(file)
+  desktop = DesktopFile.parse(entryFile)
 
-  duplicate_profile_uuid = getUUID(file)
-
-  if Args['update'] and duplicate_profile_uuid
-    uuid = duplicate_profile_uuid
-  else
-    uuid = SecureRandom.uuid
-    File.delete("#{CONFIGDIR}/#{duplicate_profile_uuid}.json") if duplicate_profile_uuid
-  end
-
-  iconPath, iconSize, iconType = IconFinder.find(arg, desktop['Desktop Entry']['Icon'])
-  profile = {
-    desktop_entry_file: "#{file}",
-    background_color: "black",
-    theme_color: "black",
+  iconPath, iconType = IconFinder.find(desktop['Desktop Entry']['Icon'])
+  return {
+    background_color: 'black',
+    theme_color: 'black',
     name: desktop['Desktop Entry']['Name'],
     short_name: desktop['Desktop Entry']['GenericName'],
     description: desktop['Desktop Entry']['Comment'],
-    start_url: "/#{uuid}/run",
-    scope: "/#{uuid}/",
-    display: "standalone",
-    exec: desktop['Desktop Entry']['Exec'].sub(/%[A-Za-z]/, ''),
-    icons: [
-      {
-        src: "/#{uuid}/appicon",
-        path: iconPath,
-        sizes: iconSize,
-        type: iconType
-      }
-    ],
+    start_url: "/exec?entry=#{entryFile}&action=main",
+    display: 'standalone',
+    icons: [{ src: "/icon?entry=#{entryFile}", type: iconType }],
     shortcuts:
       desktop.select {|k, v| k =~ /^Desktop Action/ } .map do |k, v|
-        action = k.scan(/^Desktop Action (.*)$/)[0][0]
-        url = "/#{uuid}/run?shortcut=#{action}"
-        exec = v['Exec'].sub(/%[A-Za-z]/, '')
-        { action: action, name: v['Name'], url: url, exec: exec}
+        actionTag = k[/^Desktop Action (.+)$/, 1]
+        url = "/exec?entry=#{}&action=#{actionTag}"
+        { name: v['Name'], url: url }
       end
   }
-
-  File.write("#{CONFIGDIR}/#{uuid}.json", profile.to_json)
-  return uuid, profile
 end
 
 def InstallPWA (file)
