@@ -2,6 +2,10 @@ def puts (*msg)
   msg.map {|s| STDOUT.puts(s.to_s.squeeze('/')) }
 end
 
+def warn (*msg)
+  msg.map {|s| STDOUT.puts(s.to_s.yellow) }
+end
+
 def error (*msg)
   msg.map {|s| STDERR.puts(s.to_s.lightred) }
 end
