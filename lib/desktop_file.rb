@@ -1,5 +1,5 @@
 module DesktopFile
-  def self.parse(path) # parse .desktop file into hash
+  def self.parse(entryFile) # parse .desktop file into hash
     fileIO = File.open(entryFile, 'r')
     parsedEntry = Hash.new
 
