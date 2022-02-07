@@ -15,18 +15,6 @@ require_relative 'lib/icon_finder'
 FileUtils.mkdir_p [ "#{TMPDIR}/cmdlog/", CONFIGDIR ]
 Process.setproctitle 'Chromebrew Launcher'
 
-def getUUID (arg)
-  # get desktop entry file path from package's filelist if a package name is given
-  if arg[0] != '/'
-    file = DesktopFile.find(arg)
-  else
-    file = arg
-  end
-
-  matched_file = `grep -l "\\"desktop_entry_file\\":\\"#{file}\\"" #{CONFIGDIR}/*.json 2> /dev/null`.lines(chomp: true)
-  return File.basename(matched_file[0], '.json') if matched_file.any?
-end
-
 def getPID
   if File.exist?("#{TMPDIR}/daemon.pid")
     return File.read("#{TMPDIR}/daemon.pid").to_i
@@ -154,17 +142,19 @@ def StartWebDaemon
   File.write("#{TMPDIR}/daemon.pid", Process.pid)
 
   HTTPServer.start do |sock, uri, method|
-    _, uuid, action = uri.path.split('/', 3)
+    action = File.basename(uri)
     params = URI.decode_www_form(uri.query.to_s).to_h
+    entryFile = params['entry']
+    actionTag = params['action']
 
-    unless File.exist?("#{CONFIGDIR}/#{uuid}.json")
+    unless File.exist?(entryFile)
       sock.print HTTPHeader(404)
       next
     end
 
     case action
     when 'run'
-      LaunchApp(uuid, shortcut: params['shortcut'])
+      LaunchApp(entryFile, actionTag)
       sock.print HTTPHeader(200, 'text/html')
       sock.write File.read("#{APPDIR}/pwa/app.html")
     when 'stop'
@@ -176,14 +166,6 @@ def StartWebDaemon
 end
 
 case ARGV[0]
-when 'list', 'show'
-  puts 'Installed launcher apps:'
-  Dir["#{CONFIGDIR}/*.json"].each do |json|
-    desktop_file = JSON.parse( File.read(json) )['desktop_entry_file']
-    app_name = File.basename(desktop_file, '.desktop')
-    uuid = File.basename(json, '.json')
-    puts "#{app_name}: #{uuid}"
-  end
 when 'add', 'new'
   stopExistingDaemon()
   InstallPWA(ARGV[1])
@@ -207,14 +189,6 @@ when 'remove'
     puts "Profile #{CONFIGDIR}/#{uuid}.json removed!".lightgreen
   else
     error "Error: Cannot find a profile for #{ARGV[1]} :/"
-  end
-when 'uuid'
-  ARGV.drop(1).each do |arg|
-    if (uuid = getUUID(arg))
-      puts uuid
-    else
-      error "#{arg}: No matching profile found."
-    end
   end
 when 'help', 'h', nil
   puts HELP
