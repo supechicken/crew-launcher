@@ -45,7 +45,7 @@ def CreateProfile(entryFile)
   # convert parsed hash into json format
   desktop = DesktopFile.parse(entryFile)
 
-  iconPath, iconType = IconFinder.find(desktop['Desktop Entry']['Icon'])
+  _, iconType = IconFinder.find(desktop['Desktop Entry']['Icon'])
   return {
     background_color: 'black',
     theme_color: 'black',
@@ -64,8 +64,8 @@ def CreateProfile(entryFile)
   }
 end
 
-def InstallPWA (file)
-  uuid, manifest = CreateProfile(file)
+def InstallPWA (entryFile)
+  manifest = CreateProfile(entryFile)
   # open a new tab in Chrome OS using dbus
   system 'dbus-send',
          '--system',
@@ -74,18 +74,19 @@ def InstallPWA (file)
          '--dest=org.chromium.UrlHandlerService',
          '/org/chromium/UrlHandlerService',
          'org.chromium.UrlHandlerServiceInterface.OpenUrl',
-         "string:http://localhost:#{PORT}/#{uuid}/installer.html"
+         "string:http://localhost:#{PORT}/installer.html?entry=#{entryFile}"
 
   HTTPServer.start do |sock, uri, method|
     filename = File.basename(uri.path)
+    iconPath, iconType = IconFinder.find(desktop['Desktop Entry']['Icon'])
 
     case filename
     when 'manifest.webmanifest'
       sock.print HTTPHeader(200, 'application/manifest+json')
-      sock.write File.read("#{CONFIGDIR}/#{uuid}.json")
+      sock.write JSON.parse(manifest)
     when 'appicon'
-      sock.print HTTPHeader(200, manifest[:icons][0][:type])
-      sock.write File.binread(manifest[:icons][0][:path])
+      sock.print HTTPHeader(200, iconType)
+      sock.write File.binread(iconPath)
     when 'stop'
       sock.print HTTPHeader(200)
       return
