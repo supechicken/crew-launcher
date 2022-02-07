@@ -58,7 +58,7 @@ def CreateProfile(entryFile)
     shortcuts:
       desktop.select {|k, v| k =~ /^Desktop Action/ } .map do |k, v|
         actionTag = k[/^Desktop Action (.+)$/, 1]
-        url = "/exec?entry=#{}&action=#{actionTag}"
+        url = "/exec?entry=#{entryFile}&action=#{actionTag}"
         { name: v['Name'], url: url }
       end
   }
