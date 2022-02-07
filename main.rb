@@ -102,28 +102,27 @@ def InstallPWA (file)
 end
 
 def StartWebDaemon
-  def LaunchApp(uuid, shortcut: false)
-    file = "#{CONFIGDIR}/#{uuid}.json"
-
-    unless File.exist?(file)
-      error "#{uuid}: Profile not found!"
+  def LaunchApp(entryFile, actionTag)
+    unless File.exist?(entryFile)
+      error "#{entryFile}: No such file or directory"
       retuen false
     end
 
-    profile = JSON.parse(File.read(file), symbolize_names: true)
-
-    if shortcut
-      cmd = profile[:shortcuts].select {|h| h[:action] == shortcut} [0][:exec]
+    if actionTag == 'main'
+      group = 'Desktop Entry'
     else
-      cmd = profile[:exec]
+      group = "Desktop Action #{actionTag}"
     end
+    
+    entry = DesktopFile.parse(entryFile)
+    execCmd = entry[group]['Exec'].gsub(/%[^%]/, '')
 
     log = "#{TMPDIR}/cmdlog/#{uuid}.log"
-    spawn(cmd, {[:out, :err] => File.open(log, 'w')})
+    spawn(execCmd, {[:out, :err] => File.open(log, 'w')})
 
     puts <<~EOT, nil
       Profile: #{file}
-      CmdLine: #{cmd}
+      CmdLine: #{execCmd}
       Output: #{log}
     EOT
   end
